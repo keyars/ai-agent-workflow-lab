@@ -2,7 +2,21 @@
 
 > Production-oriented infrastructure for building, securing, evaluating, and operating tool-using AI agents.
 
-This is a **platform**, not a collection of chatbot demos. It is designed around a shared agent runtime, deterministic security controls, MCP/tool execution, durable workflows, evaluation, observability, replay, and recovery.
+This is a **platform**, not a collection of chatbot demos. It provides a shared runtime and a guarded execution path so the 20 workflow agents can compose instead of becoming 20 incompatible mini-applications.
+
+## What works now
+
+- typed `Workflow` and `WorkflowStep` contracts
+- checkpointable `WorkflowState`
+- provider-neutral `ModelRouter`
+- central `ToolRegistry`
+- guarded asynchronous `ToolExecutor`
+- deny-by-default policy enforcement
+- approval gating for risky tools
+- prompt-injection inspection boundary
+- safe built-in JSON echo and file-read tools
+- automated workflow execution tests
+- GitHub Actions CI
 
 ## 20 production-oriented agents
 
@@ -27,7 +41,43 @@ This is a **platform**, not a collection of chatbot demos. It is designed around
 19. Agent Failure Recovery
 20. Agent Security Scanner
 
-## Platform architecture
+## Guarded execution path
+
+```text
+Intent / Agent
+      |
+      v
+Workflow
+      |
+      v
+ToolCall
+      |
+      v
+Prompt-Injection Boundary
+      |
+      v
+Policy / Allowlist
+   |       |
+ deny    approval
+   |       |
+   +---+---+
+       |
+       v
+ToolExecutor
+       |
+       v
+ToolRegistry
+       |
+       v
+Result + Duration
+       |
+       v
+Checkpoint / Observability / Evaluation
+```
+
+Every tool call must pass through the executor. Unknown tools and approval-gated operations are blocked before execution.
+
+## Architecture
 
 ```text
                          User / API / CLI
@@ -46,10 +96,9 @@ This is a **platform**, not a collection of chatbot demos. It is designed around
         |           |                       |           |
     Discovery    Security              Execution    State
         |           |                       |           |
-        |      +----+----+                  |           |
-        |      |         |                  |           |
-        |   Firewall  Approval              |        Durable
+        |      +----+----+                  |        Durable
         |      |         |                  |         Tasks
+        |   Firewall  Approval              |           |
         +------+---------+------------------+-----------+
                                 |
                     Observability / Evaluation
@@ -74,7 +123,7 @@ This is a **platform**, not a collection of chatbot demos. It is designed around
 
 ```text
 apps/             CLI and application entrypoints
-core/             runtime contracts, registries and policy
+core/             runtime, workflows, state, routing and policy
 security/         firewall, injection defense, approval controls
 observability/    tracing and evaluation
 agents/           20 workflow/agent modules
@@ -96,4 +145,4 @@ pytest -q
 agent-lab agents
 ```
 
-The current branch contains the shared foundation. Agent implementations will be built on these stable contracts rather than becoming 20 incompatible mini-applications.
+The next layers will add real MCP transports, browser adapters, durable persistence, model-provider integrations, richer evaluation metrics, structured audit events, and production deployment examples while preserving the guarded execution contract.
