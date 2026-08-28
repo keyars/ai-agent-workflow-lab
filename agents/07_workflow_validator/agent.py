@@ -1,8 +1,15 @@
-from core.models import ToolCall
-from security.action_firewall import ActionFirewall
+from dataclasses import dataclass
+from typing import Any
+
+@dataclass(frozen=True)
+class ValidationIssue:
+    level: str
+    message: str
 
 class WorkflowValidator:
-    name = "workflow-validator"
-    def validate(self, calls: list[ToolCall]) -> list[dict[str, str]]:
-        firewall = ActionFirewall()
-        return [{"tool": c.tool, "decision": firewall.check(c.tool).decision.value} for c in calls]
+    def validate(self, steps: list[dict[str, Any]]) -> list[ValidationIssue]:
+        issues: list[ValidationIssue] = []
+        if not steps: issues.append(ValidationIssue("error", "Workflow has no steps"))
+        for i, step in enumerate(steps):
+            if not step.get("action"): issues.append(ValidationIssue("error", f"Step {i + 1} has no action"))
+        return issues

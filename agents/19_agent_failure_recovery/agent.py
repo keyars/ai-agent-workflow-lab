@@ -1,13 +1,16 @@
 from dataclasses import dataclass
+from typing import Callable, TypeVar
+T = TypeVar("T")
 
 @dataclass(frozen=True)
-class RecoveryPlan:
-    action: str
-    delay_seconds: int = 0
-    reason: str = ""
+class RecoveryPolicy:
+    max_attempts: int = 3
 
-class AgentFailureRecovery:
-    name = "agent-failure-recovery"
-    def plan(self, error: str, attempt: int, max_attempts: int = 3) -> RecoveryPlan:
-        if attempt >= max_attempts: return RecoveryPlan("stop", reason=f"retry budget exhausted: {error}")
-        return RecoveryPlan("retry", delay_seconds=min(2 ** attempt, 30), reason=error)
+class FailureRecovery:
+    def run(self, operation: Callable[[], T], policy: RecoveryPolicy | None = None) -> T:
+        p=policy or RecoveryPolicy(); last: Exception | None=None
+        for _ in range(max(1,p.max_attempts)):
+            try: return operation()
+            except Exception as exc: last=exc
+        assert last is not None
+        raise last

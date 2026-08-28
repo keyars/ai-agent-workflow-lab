@@ -3,19 +3,17 @@ from enum import StrEnum
 from uuid import uuid4
 
 class TaskStatus(StrEnum):
-    PENDING = "pending"
-    RUNNING = "running"
-    PAUSED = "paused"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
-
+    QUEUED="queued"; RUNNING="running"; PAUSED="paused"; COMPLETED="completed"; FAILED="failed"; CANCELLED="cancelled"
 @dataclass
 class Task:
     id: str
-    status: TaskStatus = TaskStatus.PENDING
-
+    status: TaskStatus = TaskStatus.QUEUED
+    checkpoint: int = 0
 class LongRunningTaskEngine:
-    name = "long-running-task-engine"
-    def create(self) -> Task: return Task(uuid4().hex)
-    def pause(self, task: Task) -> Task: task.status = TaskStatus.PAUSED; return task
-    def cancel(self, task: Task) -> Task: task.status = TaskStatus.CANCELLED; return task
+    def __init__(self) -> None: self.tasks: dict[str, Task] = {}
+    def create(self) -> Task:
+        t=Task(uuid4().hex); self.tasks[t.id]=t; return t
+    def transition(self, task_id: str, status: TaskStatus, checkpoint: int | None = None) -> Task:
+        t=self.tasks[task_id]; t.status=status
+        if checkpoint is not None: t.checkpoint=checkpoint
+        return t

@@ -1,7 +1,7 @@
 from security.prompt_injection import PromptInjectionFirewall
 
-class PromptInjectionFirewallAgent:
-    name = "prompt-injection-firewall"
-    def inspect(self, text: str) -> dict[str, object]:
-        safe, findings = PromptInjectionFirewall().inspect(text)
+class PromptInjectionAgent:
+    def __init__(self) -> None: self.firewall = PromptInjectionFirewall()
+    def scan(self, content: str) -> dict[str, object]:
+        safe, findings = self.firewall.inspect(content)
         return {"safe": safe, "findings": findings}

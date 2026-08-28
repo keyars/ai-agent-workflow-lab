@@ -1,12 +1,10 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, field
+from typing import Any
 
-@dataclass(frozen=True)
-class RecordedAction:
-    action: str
-    target: str | None = None
-    value: str | None = None
-
+@dataclass
 class WorkflowRecorder:
-    name = "workflow-recorder"
-    def record(self, actions: list[RecordedAction]) -> list[dict[str, str | None]]:
-        return [asdict(action) for action in actions]
+    steps: list[dict[str, Any]] = field(default_factory=list)
+    def record(self, action: str, **data: Any) -> None:
+        self.steps.append({"action": action, **data})
+    def export(self) -> list[dict[str, Any]]:
+        return list(self.steps)

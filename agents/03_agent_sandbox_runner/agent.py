@@ -1,11 +1,15 @@
-from pathlib import Path
+from dataclasses import dataclass
+from typing import Callable
 
-class AgentSandboxRunner:
-    name = "agent-sandbox-runner"
-    def __init__(self, root: str = "sandbox") -> None:
-        self.root = Path(root).resolve()
-    def validate_path(self, path: str) -> Path:
-        candidate = (self.root / path).resolve()
-        if self.root != candidate and self.root not in candidate.parents:
-            raise PermissionError("Path escapes sandbox")
-        return candidate
+@dataclass(frozen=True)
+class SandboxPolicy:
+    allowed_commands: frozenset[str] = frozenset()
+    max_output_bytes: int = 65536
+
+class SandboxRunner:
+    """Policy-first command runner abstraction; production adapters can plug in a container runtime."""
+    def __init__(self, policy: SandboxPolicy | None = None) -> None:
+        self.policy = policy or SandboxPolicy()
+    def validate_command(self, command: str) -> bool:
+        executable = command.strip().split(maxsplit=1)[0] if command.strip() else ""
+        return executable in self.policy.allowed_commands

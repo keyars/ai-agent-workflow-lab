@@ -1,7 +1,14 @@
-class AgentCostOptimizer:
-    name = "agent-cost-optimizer"
-    def savings(self, current_cost: float, optimized_cost: float) -> dict[str, float]:
-        if current_cost < 0 or optimized_cost < 0: raise ValueError("Costs cannot be negative")
-        saved = max(0.0, current_cost - optimized_cost)
-        percent = (saved / current_cost * 100.0) if current_cost else 0.0
-        return {"current": current_cost, "optimized": optimized_cost, "saved": saved, "savings_percent": percent}
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class ModelTier:
+    name: str
+    input_cost_per_million: float
+    output_cost_per_million: float
+
+class CostOptimizer:
+    def choose(self, tiers: list[ModelTier], required_quality: float = 0.0) -> ModelTier:
+        if not tiers: raise ValueError("No model tiers supplied")
+        return min(tiers, key=lambda t: t.input_cost_per_million + t.output_cost_per_million)
+    def estimate(self, tier: ModelTier, input_tokens: int, output_tokens: int) -> float:
+        return (input_tokens * tier.input_cost_per_million + output_tokens * tier.output_cost_per_million) / 1_000_000

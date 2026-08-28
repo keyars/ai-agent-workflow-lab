@@ -1,4 +1,8 @@
-class AgentReplayDebugger:
-    name = "agent-replay-debugger"
-    def replay(self, events: list[dict[str, object]]) -> list[dict[str, object]]:
-        return [dict(event) for event in events]
+from copy import deepcopy
+from typing import Any
+
+class ReplayDebugger:
+    def replay(self, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return deepcopy(events)
+    def tool_calls(self, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        return [e for e in events if e.get("type") == "tool_call"]

@@ -1,13 +1,13 @@
 from dataclasses import dataclass
+from typing import Any
 
 @dataclass(frozen=True)
-class MCPMapping:
+class RESTEndpoint:
     method: str
     path: str
-    tool_name: str
+    operation_id: str
+    description: str = ""
 
 class RESTToMCPAdapter:
-    name = "rest-to-mcp-adapter"
-    def map_endpoint(self, method: str, path: str) -> MCPMapping:
-        normalized = path.strip("/").replace("/", ".") or "root"
-        return MCPMapping(method.upper(), path, f"{method.lower()}.{normalized}")
+    def convert(self, endpoint: RESTEndpoint) -> dict[str, Any]:
+        return {"name": endpoint.operation_id, "description": endpoint.description, "http": {"method": endpoint.method.upper(), "path": endpoint.path}}
